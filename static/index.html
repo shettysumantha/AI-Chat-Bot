@@ -17,8 +17,8 @@
       <nav class="nav-list" aria-label="Primary navigation">
         <a class="nav-link active" href="#chat" data-view="chat"><span>◈</span> Conversations</a>
         <a class="nav-link" href="#analytics" data-view="analytics"><span>◫</span> Analytics</a>
-        <a class="nav-link" href="#knowledge"><span>◌</span> Knowledge base</a>
-        <a class="nav-link" href="#settings"><span>⚙</span> Settings</a>
+        <a class="nav-link" href="#knowledge" data-view="knowledge"><span>◌</span> Knowledge base</a>
+        <a class="nav-link" href="#settings" data-view="settings"><span>⚙</span> Settings</a>
       </nav>
       <div class="sidebar-bottom">
         <div class="upgrade-card"><span class="spark">✦</span><strong>Unlock more with Pro</strong><p>Get advanced AI tools &amp; insights.</p><button>Explore Pro</button></div>
@@ -28,6 +28,7 @@
 
     <section class="workspace" id="chatView">
       <header class="topbar"><div><p class="eyebrow">YOUR AI COMPANION</p><h1>Good afternoon, Sumantha <span>✦</span></h1></div><div class="top-actions"><button class="icon-button" aria-label="Notifications">♧<i></i></button><button class="help-button">? <span>Help center</span></button></div></header>
+      <div class="user-bar" id="userBar"><!-- filled by JS --></div>
       <div class="content-grid">
         <section class="chat-panel">
           <div class="chat-heading"><div><h2>New conversation</h2><p><span class="online-dot"></span> Nexa AI is online and ready to help</p></div><button class="more-button" aria-label="Conversation options">•••</button></div>
@@ -46,7 +47,24 @@
     </section>
 
     <section class="workspace analytics-view hidden" id="analyticsView"><header class="topbar"><div><p class="eyebrow">PERFORMANCE OVERVIEW</p><h1>Chatbot analytics <span>↗</span></h1></div></header><div class="analytics-grid"><div class="metric"><p>Total conversations</p><strong>2,847</strong><span>↑ 18.2% this month</span></div><div class="metric"><p>Resolution rate</p><strong>94.8%</strong><span>↑ 4.6% this month</span></div><div class="metric"><p>Avg. satisfaction</p><strong>4.9/5</strong><span>↑ 0.3 this month</span></div><div class="chart-card"><div><h2>Conversation volume</h2><p>Last 7 days</p></div><div class="bars"><i style="height:42%"></i><i style="height:65%"></i><i style="height:49%"></i><i style="height:78%"></i><i style="height:60%"></i><i style="height:92%"></i><i style="height:74%"></i></div><div class="chart-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div></div></div></section>
+
+        <section class="workspace hidden" id="knowledgeView">
+          <header class="topbar"><div><p class="eyebrow">KNOWLEDGE BASE</p><h1>Knowledge base</h1></div></header>
+          <div class="content-grid"><div class="card"><h3>No knowledge sources yet</h3><p>Add documents or integrations to let Nexa answer from your data.</p><button id="addKnowledge">Add a source</button></div></div>
+        </section>
+
+        <section class="workspace hidden" id="settingsView">
+          <header class="topbar"><div><p class="eyebrow">SETTINGS</p><h1>Workspace settings</h1></div></header>
+          <div class="content-grid"><div class="card"><h3>Settings</h3><p>Configure your workspace and AI preferences here.</p></div></div>
+        </section>
   </main>
+  <!-- Auth views -->
+  <section class="auth-view hidden" id="loginView">
+    <div class="card"><h2>Login</h2><form id="loginForm"><input id="loginEmail" placeholder="Email" required><input id="loginPassword" type="password" placeholder="Password" required><button type="submit">Login</button></form><p>Or <a href="#" id="showRegister">register</a></p></div>
+  </section>
+  <section class="auth-view hidden" id="registerView">
+    <div class="card"><h2>Register</h2><form id="registerForm"><input id="regName" placeholder="Full name" required><input id="regEmail" placeholder="Email" required><input id="regPhone" placeholder="Phone"><input id="regPassword" type="password" placeholder="Password" required><button type="submit">Create account</button></form><p>Or <a href="#" id="showLogin">login</a></p></div>
+  </section>
   <script src="/static/app.js"></script>
 </body>
 </html>
