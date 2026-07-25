@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexa — AI Support Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#"><span class="brand-mark">✦</span><span>Nexa</span></a>
+      <button class="new-chat" id="newChat"><span>＋</span> New conversation</button>
+      <nav class="nav-list" aria-label="Primary navigation">
+        <a class="nav-link active" href="#chat" data-view="chat"><span>◈</span> Conversations</a>
+        <a class="nav-link" href="#analytics" data-view="analytics"><span>◫</span> Analytics</a>
+        <a class="nav-link" href="#knowledge"><span>◌</span> Knowledge base</a>
+        <a class="nav-link" href="#settings"><span>⚙</span> Settings</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="upgrade-card"><span class="spark">✦</span><strong>Unlock more with Pro</strong><p>Get advanced AI tools &amp; insights.</p><button>Explore Pro</button></div>
+        <div class="profile"><div class="avatar small">SK</div><div><strong>Sumantha K</strong><span>Workspace owner</span></div><button aria-label="Profile menu">···</button></div>
+      </div>
+    </aside>
+
+    <section class="workspace" id="chatView">
+      <header class="topbar"><div><p class="eyebrow">YOUR AI COMPANION</p><h1>Good afternoon, Sumantha <span>✦</span></h1></div><div class="top-actions"><button class="icon-button" aria-label="Notifications">♧<i></i></button><button class="help-button">? <span>Help center</span></button></div></header>
+      <div class="content-grid">
+        <section class="chat-panel">
+          <div class="chat-heading"><div><h2>New conversation</h2><p><span class="online-dot"></span> Nexa AI is online and ready to help</p></div><button class="more-button" aria-label="Conversation options">•••</button></div>
+          <div class="chat-messages" id="chatMessages">
+            <article class="message bot-message"><div class="bot-avatar">✦</div><div class="message-content"><div class="message-meta"><strong>Nexa AI</strong><time>Just now</time></div><div class="bubble">Hi Sumantha! I’m Nexa, your AI assistant. I can help answer questions, brainstorm ideas, analyze sentiment, or point you in the right direction. What’s on your mind today?</div><div class="quick-replies"><button data-prompt="What can you help me with?">What can you help me with?</button><button data-prompt="Help me brainstorm some ideas">Brainstorm ideas</button></div></div></article>
+          </div>
+          <form class="composer" id="chatForm"><label for="messageInput" class="sr-only">Message Nexa</label><textarea id="messageInput" rows="1" placeholder="Message Nexa..."></textarea><div class="composer-tools"><button type="button" class="attach" aria-label="Attach file">⌇</button><span>Press <kbd>Enter</kbd> to send</span><button type="submit" class="send-button" aria-label="Send message">↑</button></div></form>
+          <p class="privacy-note">✦ Nexa may make mistakes. Check important info.</p>
+        </section>
+        <aside class="insights-panel">
+          <div class="insight-card gradient-card"><div class="card-icon">✦</div><p>YOUR AI IS READY</p><h3>Let’s make today<br>more productive.</h3><div class="orbs"></div></div>
+          <div class="card stats-card"><div class="card-title"><h3>Today’s activity</h3><button>View all <span>→</span></button></div><div class="stat-row"><div class="mini-icon purple">◌</div><div><strong id="conversationCount">1</strong><span>Conversations</span></div><b>+12%</b></div><div class="stat-row"><div class="mini-icon yellow">ϟ</div><div><strong id="messageCount">2</strong><span>Messages exchanged</span></div><b>+8%</b></div><div class="stat-row"><div class="mini-icon blue">◷</div><div><strong>1.2s</strong><span>Avg. response time</span></div><b>−0.3s</b></div></div>
+          <div class="card capabilities"><h3>Try asking Nexa</h3><button data-prompt="Explain a complex topic simply"><span>⌁</span> Explain a concept <b>→</b></button><button data-prompt="Help me write a professional email"><span>✎</span> Write something <b>→</b></button><button data-prompt="Analyze the sentiment of: I am excited about this project"><span>◌</span> Analyze sentiment <b>→</b></button></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="workspace analytics-view hidden" id="analyticsView"><header class="topbar"><div><p class="eyebrow">PERFORMANCE OVERVIEW</p><h1>Chatbot analytics <span>↗</span></h1></div></header><div class="analytics-grid"><div class="metric"><p>Total conversations</p><strong>2,847</strong><span>↑ 18.2% this month</span></div><div class="metric"><p>Resolution rate</p><strong>94.8%</strong><span>↑ 4.6% this month</span></div><div class="metric"><p>Avg. satisfaction</p><strong>4.9/5</strong><span>↑ 0.3 this month</span></div><div class="chart-card"><div><h2>Conversation volume</h2><p>Last 7 days</p></div><div class="bars"><i style="height:42%"></i><i style="height:65%"></i><i style="height:49%"></i><i style="height:78%"></i><i style="height:60%"></i><i style="height:92%"></i><i style="height:74%"></i></div><div class="chart-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div></div></div></section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
