@@ -167,12 +167,22 @@ def print_db_backend():
         try:
             conn = get_connection()
             cur = conn.cursor()
-            cur.execute("SELECT current_database(), current_user();")
-            row = cur.fetchone()
-            if row:
-                print(f"PostgreSQL connected to database={row[0]}, user={row[1]}")
-            cur.close()
-            conn.close()
+            try:
+                print('DEBUG: Verifying PostgreSQL connection by querying current_database()')
+                cur.execute("SELECT current_database()")
+                db_name = cur.fetchone()[0]
+                cur.execute("SELECT current_user()")
+                user = cur.fetchone()[0]
+                print(f"PostgreSQL connected to database={db_name}, user={user}")
+            except Exception as exc:
+                print('WARNING: current_database()/current_user() query failed, trying SHOW server_version')
+                print('DEBUG: SQL error during verification query:', exc)
+                cur.execute("SHOW server_version")
+                version = cur.fetchone()[0]
+                print(f"PostgreSQL connected, server_version={version}")
+            finally:
+                cur.close()
+                conn.close()
         except Exception as exc:
             print('ERROR: Could not verify PostgreSQL connection details.', exc)
 
