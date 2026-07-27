@@ -7,24 +7,35 @@ installed, it falls back to a local SQLite database `chatbot.db`.
 
 import os
 import sqlite3
+import urllib.parse
 
 DATABASE_URL = os.environ.get('DATABASE_URL') or os.environ.get('PG_DATABASE_URL')
-USE_POSTGRES = DATABASE_URL or os.environ.get('USE_POSTGRES', '').lower() in ('1', 'true', 'yes')
+USE_POSTGRES = bool(DATABASE_URL or os.environ.get('USE_POSTGRES', '').lower() in ('1', 'true', 'yes'))
 PG_AVAILABLE = False
+DB_DRIVER = None
 psycopg2 = None
+pg8000 = None
 if USE_POSTGRES:
     try:
         import psycopg2
         PG_AVAILABLE = True
+        DB_DRIVER = 'psycopg2'
     except Exception as exc:
-        PG_AVAILABLE = False
-        print('WARNING: PostgreSQL requested but psycopg2 is not installed. Falling back to SQLite.', exc)
+        try:
+            import pg8000
+            PG_AVAILABLE = True
+            DB_DRIVER = 'pg8000'
+            print('INFO: psycopg2 failed, using pg8000 as PostgreSQL driver.')
+        except Exception as exc2:
+            PG_AVAILABLE = False
+            print('WARNING: PostgreSQL requested but no compatible driver is available. Falling back to SQLite.')
+            print('psycopg2 error:', exc)
+            print('pg8000 error:', exc2)
 
-# Postgres config (only used when psycopg2 is available and DATABASE_URL is unavailable)
+# Postgres config (only used when DATABASE_URL is unavailable)
 DB_CONFIG = {
     'host': os.environ.get('PG_HOST', 'localhost'),
-      $env:DATABASE_URL="postgresql://postgres:YourPassword@localhost:5432/YourDatabase"
-    python app.py  'port': int(os.environ.get('PG_PORT', 5432)),
+    'port': int(os.environ.get('PG_PORT', 5432)),
     'database': os.environ.get('PG_DATABASE', 'MyDatabase'),
     'user': os.environ.get('PG_USER', 'postgres'),
     'password': os.environ.get('PG_PASSWORD', 'Shetty123@'),
@@ -35,15 +46,63 @@ SQLITE_PATH = os.environ.get('SQLITE_PATH', 'chatbot.db')
 
 def get_db_backend():
     if PG_AVAILABLE:
-        return 'PostgreSQL'
+        return f"PostgreSQL ({DB_DRIVER})"
     return 'SQLite'
+
+
+def _mask_secret(value):
+    if value is None:
+        return 'None'
+    if value == '':
+        return 'EMPTY'
+    return value[:1] + '***' + value[-1:]
 
 
 def get_connection():
     if PG_AVAILABLE:
         if DATABASE_URL:
-            return psycopg2.connect(DATABASE_URL)
-        return psycopg2.connect(**DB_CONFIG)
+            parsed = urllib.parse.urlparse(DATABASE_URL)
+            db_name = parsed.path.lstrip('/')
+            user = parsed.username
+            password = parsed.password
+            print(f"INFO: Parsed DATABASE_URL: user={_mask_secret(user)}, host={parsed.hostname}, port={parsed.port or 5432}, database={db_name}")
+            if user is None or password is None:
+                print('WARNING: DATABASE_URL does not contain a valid username/password. Falling back to PG_* variables if available.')
+            if DB_DRIVER == 'psycopg2':
+                print(f"INFO: Connecting to PostgreSQL via psycopg2 using DATABASE_URL {parsed.hostname}/{db_name}")
+                return psycopg2.connect(DATABASE_URL)
+            if DB_DRIVER == 'pg8000':
+                try:
+                    print(f"INFO: Connecting to PostgreSQL via pg8000 using DATABASE_URL {parsed.hostname}/{db_name}")
+                    return pg8000.connect(
+                        user=user,
+                        password=password,
+                        host=parsed.hostname,
+                        port=parsed.port or 5432,
+                        database=db_name,
+                    )
+                except Exception as exc:
+                    print('WARNING: pg8000 failed to connect using DATABASE_URL, trying explicit PG_* config.', exc)
+                    print(f"INFO: Explicit PG_CONFIG: user={_mask_secret(DB_CONFIG['user'])}, host={DB_CONFIG['host']}, port={DB_CONFIG['port']}, database={DB_CONFIG['database']}")
+                    return pg8000.connect(
+                        user=DB_CONFIG['user'],
+                        password=DB_CONFIG['password'],
+                        host=DB_CONFIG['host'],
+                        port=DB_CONFIG['port'],
+                        database=DB_CONFIG['database'],
+                    )
+        if DB_DRIVER == 'psycopg2':
+            print(f"INFO: Connecting to PostgreSQL via psycopg2 using PG_CONFIG {DB_CONFIG['host']}/{DB_CONFIG['database']}")
+            return psycopg2.connect(**DB_CONFIG)
+        if DB_DRIVER == 'pg8000':
+            print(f"INFO: Connecting to PostgreSQL via pg8000 using PG_CONFIG {DB_CONFIG['host']}/{DB_CONFIG['database']}")
+            return pg8000.connect(
+                user=DB_CONFIG['user'],
+                password=DB_CONFIG['password'],
+                host=DB_CONFIG['host'],
+                port=DB_CONFIG['port'],
+                database=DB_CONFIG['database'],
+            )
     return sqlite3.connect(SQLITE_PATH)
 
 
@@ -102,17 +161,37 @@ def init_db():
 
 
 def print_db_backend():
-    print(f"Using database backend: {get_db_backend()}")
+    backend = get_db_backend()
+    print(f"Using database backend: {backend}")
+    if PG_AVAILABLE:
+        try:
+            conn = get_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT current_database(), current_user();")
+            row = cur.fetchone()
+            if row:
+                print(f"PostgreSQL connected to database={row[0]}, user={row[1]}")
+            cur.close()
+            conn.close()
+        except Exception as exc:
+            print('ERROR: Could not verify PostgreSQL connection details.', exc)
 
 
 def save_message(msg, res):
     if PG_AVAILABLE:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("INSERT INTO conversations(user_message, bot_response) VALUES (%s, %s)", (msg, res))
-        conn.commit()
-        cur.close()
-        conn.close()
+        try:
+            print(f"DEBUG: Inserting conversation row to PostgreSQL: message={msg!r}")
+            cur.execute("INSERT INTO conversations(user_message, bot_response) VALUES (%s, %s)", (msg, res))
+            conn.commit()
+            print(f"DEBUG: Conversation row inserted, rowcount={cur.rowcount}")
+        except Exception as exc:
+            print('ERROR: Failed to insert conversation row into PostgreSQL.', exc)
+            raise
+        finally:
+            cur.close()
+            conn.close()
     else:
         conn = sqlite3.connect(SQLITE_PATH)
         c = conn.cursor()
