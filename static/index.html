@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/auth.css">
 </head>
 <body>
   <main class="app-shell">
@@ -27,8 +28,8 @@
     </aside>
 
     <section class="workspace" id="chatView">
-      <header class="topbar"><div><p class="eyebrow">YOUR AI COMPANION</p><h1>Good afternoon, Sumantha <span>✦</span></h1></div><div class="top-actions"><button class="icon-button" aria-label="Notifications">♧<i></i></button><button class="help-button">? <span>Help center</span></button></div></header>
-      <div class="user-bar" id="userBar"><!-- filled by JS --></div>
+      <header class="topbar"><div><p class="eyebrow">YOUR AI COMPANION</p><h1>Good afternoon, Sumantha <span>✦</span></h1></div><div class="top-actions"><div id="authButtons"><!-- auth buttons populated by JS --></div><button class="icon-button" aria-label="Notifications">♧<i></i></button><button class="help-button">? <span>Help center</span></button></div></header>
+      <div class="user-bar" id="userBar"><!-- legacy: used for profile settings --></div>
       <div class="content-grid">
         <section class="chat-panel">
           <div class="chat-heading"><div><h2>New conversation</h2><p><span class="online-dot"></span> Nexa AI is online and ready to help</p></div><button class="more-button" aria-label="Conversation options">•••</button></div>
@@ -55,16 +56,88 @@
 
         <section class="workspace hidden" id="settingsView">
           <header class="topbar"><div><p class="eyebrow">SETTINGS</p><h1>Workspace settings</h1></div></header>
-          <div class="content-grid"><div class="card"><h3>Settings</h3><p>Configure your workspace and AI preferences here.</p></div></div>
+          <div class="content-grid">
+            <div class="card settings-card">
+              <div class="profile-top">
+                <div class="profile-avatar-wrapper">
+                  <label for="photoUpload" class="profile-avatar">
+                    <img id="avatarImage" src="/static/img/profile.png" alt="Profile photo">
+                    <div class="avatar-overlay"><span>📷</span></div>
+                  </label>
+                  <input type="file" id="photoUpload" accept="image/jpeg,image/jpg,image/png,image/webp" hidden>
+                </div>
+                <div class="profile-meta">
+                  <h1 id="displayName">Sumantha Shetty</h1>
+                  <p class="profile-detail" id="displayEmail">sumanthshettytech@gmail.com</p>
+                  <p class="profile-detail" id="displayPhone">+91 8105385992</p>
+                </div>
+              </div>
+              <button id="editProfileButton" class="button button-primary profile-action-button">✏️ Edit Profile</button>
+              <div class="menu-card">
+                <button class="menu-row" id="menuChangePassword"><span class="menu-icon">🔐</span><div class="menu-copy"><strong>Change Password</strong><span>Update your account security</span></div><span class="menu-arrow">›</span></button>
+                <button class="menu-row" id="menuNotifications"><span class="menu-icon">🔔</span><div class="menu-copy"><strong>Notification Settings</strong><span>Manage app alerts</span></div><span class="menu-arrow">›</span></button>
+                <button class="menu-row" id="menuHelp"><span class="menu-icon">❓</span><div class="menu-copy"><strong>Help & Support</strong><span>Contact our support team</span></div><span class="menu-arrow">›</span></button>
+                <button class="menu-row" id="menuAbout"><span class="menu-icon">ℹ️</span><div class="menu-copy"><strong>About Nexa AI</strong><span>Learn about the platform</span></div><span class="menu-arrow">›</span></button>
+                <button class="menu-row logout-row" id="menuLogout"><span class="menu-icon">🚪</span><div class="menu-copy"><strong>Logout</strong><span>Sign out of your account</span></div><span class="menu-arrow">›</span></button>
+              </div>
+            </div>
+          </div>
         </section>
-  </main>
-  <!-- Auth views -->
-  <section class="auth-view hidden" id="loginView">
-    <div class="card"><h2>Login</h2><form id="loginForm"><input id="loginEmail" placeholder="Email" required><input id="loginPassword" type="password" placeholder="Password" required><button type="submit">Login</button></form><p>Or <a href="#" id="showRegister">register</a></p></div>
-  </section>
-  <section class="auth-view hidden" id="registerView">
-    <div class="card"><h2>Register</h2><form id="registerForm"><input id="regName" placeholder="Full name" required><input id="regEmail" placeholder="Email" required><input id="regPhone" placeholder="Phone"><input id="regPassword" type="password" placeholder="Password" required><button type="submit">Create account</button></form><p>Or <a href="#" id="showLogin">login</a></p></div>
-  </section>
+
+        <div class="modal hidden" id="editModal">
+          <div class="modal-card">
+            <div class="modal-header"><h2>Edit Profile</h2><button class="close-modal" data-close="editModal">×</button></div>
+            <div class="profile-avatar-wrapper edit-avatar">
+              <label for="photoUpload" class="profile-avatar profile-avatar-sm">
+                <img id="modalAvatarImage" src="/static/img/profile.png" alt="Profile photo preview">
+                <div class="avatar-overlay"><span>📷</span></div>
+              </label>
+            </div>
+            <div class="edit-row"><label>First Name</label><input id="firstName" type="text" placeholder="First name"></div>
+            <div class="edit-row"><label>Last Name</label><input id="lastName" type="text" placeholder="Last name"></div>
+            <div class="edit-row"><label>Email</label><input id="editEmail" type="email" placeholder="Email address"></div>
+            <div class="edit-row"><label>Mobile</label><input id="editPhone" type="tel" placeholder="Mobile number"></div>
+            <div class="modal-actions"><button id="saveProfile" class="button button-primary">Save Changes</button><button class="button button-outline" data-close="editModal">Cancel</button></div>
+            <p class="success-message hidden" id="profileSuccess">✅ Your profile has been updated.</p>
+          </div>
+        </div>
+
+        <div class="modal hidden" id="helpModal">
+          <div class="modal-card">
+            <div class="modal-header"><h2>Contact Support</h2><button class="close-modal" data-close="helpModal">×</button></div>
+            <p>Need a hand? Send your question and our support team will respond shortly.</p>
+            <div class="support-contact"><span>📧</span><div><p>Support Email</p><strong>sumanthshettytech@gmail.com</strong></div></div>
+            <div class="edit-row"><label>Subject</label><input id="supportSubject" type="text" placeholder="Subject"></div>
+            <div class="edit-row"><label>Message</label><textarea id="supportMessage" rows="4" placeholder="Describe your issue..."></textarea></div>
+            <div class="modal-actions"><button id="sendSupport" class="button button-primary">Send Message</button><button class="button button-outline" data-close="helpModal">Cancel</button></div>
+            <p class="success-message hidden" id="supportSuccess">✅ Your message has been sent successfully. Our support team will respond shortly.</p>
+          </div>
+        </div>
+
+        <div class="modal hidden" id="aboutModal">
+          <div class="modal-card about-card">
+            <div class="modal-header"><h2>About Nexa AI</h2><button class="close-modal" data-close="aboutModal">×</button></div>
+            <div class="about-grid">
+              <div><strong>Application</strong><p>Nexa AI</p></div>
+              <div><strong>Version</strong><p>v1.0.0</p></div>
+              <div><strong>Developer</strong><p>Sumantha Shetty</p></div>
+              <div><strong>Technology Stack</strong><p>Python, Flask, PostgreSQL, Redis, LangChain, Transformers, HTML, CSS, JavaScript</p></div>
+            </div>
+            <p class="about-description">Nexa AI is an intelligent AI assistant that helps users with conversations, coding, SQL queries, document analysis, knowledge management, and productivity.</p>
+            <p class="footer-copy">© 2026 Nexa AI. All Rights Reserved.</p>
+          </div>
+        </div>
+
+        <div class="modal hidden" id="logoutModal">
+          <div class="modal-card">
+            <div class="modal-header"><h2>Logout</h2><button class="close-modal" data-close="logoutModal">×</button></div>
+            <p>Are you sure you want to logout?</p>
+            <div class="modal-actions"><button class="button button-outline" data-close="logoutModal">Cancel</button><button id="confirmLogout" class="button button-primary">Logout</button></div>
+          </div>
+        </div>
+      </main>
+  <!-- Auth pages moved to dedicated routes (/login, /register) -->
   <script src="/static/app.js"></script>
+  <script src="/static/profile.js"></script>
 </body>
 </html>

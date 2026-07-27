@@ -27,8 +27,8 @@ input.addEventListener('input', () => { input.style.height = 'auto'; input.style
 document.querySelectorAll('[data-prompt]').forEach(btn => btn.addEventListener('click', () => sendMessage(btn.dataset.prompt)));
 document.getElementById('newChat').addEventListener('click', () => { messages.innerHTML = ''; addMessage('Fresh start! What would you like to explore today?', 'bot'); document.getElementById('conversationCount').textContent = Number(document.getElementById('conversationCount').textContent) + 1; input.focus(); });
 document.querySelectorAll('[data-view]').forEach(link => link.addEventListener('click', e => {
-  e.preventDefault();
   const view = link.dataset.view || 'chat';
+  e.preventDefault();
   const available = ['chat','analytics','knowledge','settings'];
   available.forEach(v => {
     const el = document.getElementById(`${v}View`);
@@ -43,21 +43,15 @@ async function loadCurrentUser(){
     const res = await fetch('/me');
     const data = await res.json();
     const user = data.user;
-    const userBar = document.getElementById('userBar');
+    const authButtons = document.getElementById('authButtons');
     if(user){
-      userBar.innerHTML = `<div class="profile-inline"><img src="${user.photo||'/static/default-avatar.png'}" alt="avatar" class="avatar small"> <strong>${user.name}</strong> <button id="logoutBtn">Logout</button></div>`;
-      document.getElementById('settingsView').querySelector('.card').innerHTML = `<h3>Settings</h3><div class="profile-card"><img src="${user.photo||'/static/default-avatar.png'}" class="avatar large"><p><strong>${user.name}</strong></p><p>${user.email}</p><p>${user.phone||''}</p><form id="photoForm"><input type="file" name="photo" id="photoInput"><button type="submit">Upload photo</button></form></div>`;
+      authButtons.innerHTML = `<div class="profile-inline"><img src="${user.photo||'/static/default-avatar.png'}" alt="avatar" class="avatar small"> <strong>${user.name}</strong> <button id="logoutBtn" class="auth-logout">Logout</button></div>`;
       document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await fetch('/logout',{method:'POST'}); window.location.reload(); });
-      // photo upload
-      const photoForm = document.getElementById('photoForm');
-      if(photoForm){
-        photoForm.addEventListener('submit', async e=>{ e.preventDefault(); const file = document.getElementById('photoInput').files[0]; if(!file) return; const fd=new FormData(); fd.append('photo',file); const r = await fetch('/upload_photo',{method:'POST', body:fd}); const j=await r.json(); if(j.photo){ loadCurrentUser(); }
-        });
-      }
+    
     } else {
-      userBar.innerHTML = `<div class="profile-inline"><button id="openLogin">Login</button> <button id="openRegister">Register</button></div>`;
-      document.getElementById('openLogin').addEventListener('click', ()=>{ document.getElementById('loginView').classList.remove('hidden'); });
-      document.getElementById('openRegister').addEventListener('click', ()=>{ document.getElementById('registerView').classList.remove('hidden'); });
+      authButtons.innerHTML = `<div class="auth-actions"><button id="openLogin" class="auth-btn auth-btn-outline">Login</button> <button id="openRegister" class="auth-btn auth-btn-primary">Register</button></div>`;
+      document.getElementById('openLogin').addEventListener('click', ()=>{ window.location.href = '/login'; });
+      document.getElementById('openRegister').addEventListener('click', ()=>{ window.location.href = '/register'; });
     }
   }catch(e){ console.log(e); }
 }

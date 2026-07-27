@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Settings — Nexa AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/auth.css">
+</head>
+<body>
+  <main class="profile-shell">
+    <section class="profile-card">
+      <div class="profile-top">
+        <div class="profile-avatar-wrapper">
+          <label for="photoUpload" class="profile-avatar">
+            <img id="avatarImage" src="/static/img/profile.png" alt="Profile photo">
+            <div class="avatar-overlay"><span>📷</span></div>
+          </label>
+          <input type="file" id="photoUpload" accept="image/jpeg,image/jpg,image/png,image/webp" hidden>
+        </div>
+        <div class="profile-meta">
+          <h1 id="displayName">Sumantha Shetty</h1>
+          <p class="profile-detail" id="displayEmail">sumanthshettytech@gmail.com</p>
+          <p class="profile-detail" id="displayPhone">+91 8105385992</p>
+        </div>
+      </div>
+
+      <button id="editProfileButton" class="button button-primary profile-action-button">✏️ Edit Profile</button>
+
+      <div class="menu-card">
+        <button class="menu-row" id="menuChangePassword"><span class="menu-icon">🔐</span><div class="menu-copy"><strong>Change Password</strong><span>Update your account security</span></div><span class="menu-arrow">›</span></button>
+        <button class="menu-row" id="menuNotifications"><span class="menu-icon">🔔</span><div class="menu-copy"><strong>Notification Settings</strong><span>Manage app alerts</span></div><span class="menu-arrow">›</span></button>
+        <button class="menu-row" id="menuHelp"><span class="menu-icon">❓</span><div class="menu-copy"><strong>Help & Support</strong><span>Contact our support team</span></div><span class="menu-arrow">›</span></button>
+        <button class="menu-row" id="menuAbout"><span class="menu-icon">ℹ️</span><div class="menu-copy"><strong>About Nexa AI</strong><span>Learn about the platform</span></div><span class="menu-arrow">›</span></button>
+        <button class="menu-row logout-row" id="menuLogout"><span class="menu-icon">🚪</span><div class="menu-copy"><strong>Logout</strong><span>Sign out of your account</span></div><span class="menu-arrow">›</span></button>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal hidden" id="editModal">
+    <div class="modal-card">
+      <div class="modal-header"><h2>Edit Profile</h2><button class="close-modal" data-close="editModal">×</button></div>
+      <div class="profile-avatar-wrapper edit-avatar">
+        <label for="photoUpload" class="profile-avatar profile-avatar-sm">
+          <img id="modalAvatarImage" src="/static/img/profile.png" alt="Profile photo preview">
+          <div class="avatar-overlay"><span>📷</span></div>
+        </label>
+      </div>
+      <div class="edit-row"><label>First Name</label><input id="firstName" type="text" placeholder="First name"></div>
+      <div class="edit-row"><label>Last Name</label><input id="lastName" type="text" placeholder="Last name"></div>
+      <div class="edit-row"><label>Email</label><input id="editEmail" type="email" placeholder="Email address"></div>
+      <div class="edit-row"><label>Mobile</label><input id="editPhone" type="tel" placeholder="Mobile number"></div>
+      <div class="modal-actions"><button id="saveProfile" class="button button-primary">Save Changes</button><button class="button button-outline" data-close="editModal">Cancel</button></div>
+      <p class="success-message hidden" id="profileSuccess">✅ Your profile has been updated.</p>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="helpModal">
+    <div class="modal-card">
+      <div class="modal-header"><h2>Contact Support</h2><button class="close-modal" data-close="helpModal">×</button></div>
+      <p>Need a hand? Send your question and our support team will respond shortly.</p>
+      <div class="support-contact"><span>📧</span><div><p>Support Email</p><strong>sumanthshettytech@gmail.com</strong></div></div>
+      <div class="edit-row"><label>Subject</label><input id="supportSubject" type="text" placeholder="Subject"></div>
+      <div class="edit-row"><label>Message</label><textarea id="supportMessage" rows="4" placeholder="Describe your issue..."></textarea></div>
+      <div class="modal-actions"><button id="sendSupport" class="button button-primary">Send Message</button><button class="button button-outline" data-close="helpModal">Cancel</button></div>
+      <p class="success-message hidden" id="supportSuccess">✅ Your message has been sent successfully. Our support team will respond shortly.</p>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="aboutModal">
+    <div class="modal-card about-card">
+      <div class="modal-header"><h2>About Nexa AI</h2><button class="close-modal" data-close="aboutModal">×</button></div>
+      <div class="about-grid">
+        <div><strong>Application</strong><p>Nexa AI</p></div>
+        <div><strong>Version</strong><p>v1.0.0</p></div>
+        <div><strong>Developer</strong><p>Sumantha Shetty</p></div>
+        <div><strong>Technology Stack</strong><p>Python, Flask, PostgreSQL, Redis, LangChain, Transformers, HTML, CSS, JavaScript</p></div>
+      </div>
+      <p class="about-description">Nexa AI is an intelligent AI assistant that helps users with conversations, coding, SQL queries, document analysis, knowledge management, and productivity.</p>
+      <p class="footer-copy">© 2026 Nexa AI. All Rights Reserved.</p>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="logoutModal">
+    <div class="modal-card">
+      <div class="modal-header"><h2>Logout</h2><button class="close-modal" data-close="logoutModal">×</button></div>
+      <p>Are you sure you want to logout?</p>
+      <div class="modal-actions"><button class="button button-outline" data-close="logoutModal">Cancel</button><button id="confirmLogout" class="button button-primary">Logout</button></div>
+    </div>
+  </div>
+
+  <script src="/static/profile.js"></script>
+</body>
+</html>

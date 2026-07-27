@@ -1,0 +1,73 @@
+/* Authentication specific styles */
+.auth-actions{display:flex;gap:8px;align-items:center}
+.auth-btn{padding:8px 14px;border-radius:20px;font-weight:600;cursor:pointer;border:1px solid transparent;font-family:'DM Sans',sans-serif}
+.auth-btn-outline{background:transparent;border-color:var(--line);color:var(--ink)}
+.auth-btn-primary{background:linear-gradient(90deg,#7b63ff,#5c3fe6);color:#fff;box-shadow:0 8px 18px rgba(92,63,230,0.18)}
+.auth-logout{background:transparent;border:0;color:var(--muted);cursor:pointer;margin-left:10px}
+.profile-inline{display:flex;align-items:center;gap:8px}
+.profile-inline .avatar.small{width:34px;height:34px;border-radius:50%}
+
+/* Login/Register page styles (minimal, responsive) */
+.auth-split{display:flex;min-height:80vh;background:linear-gradient(180deg,#fbfbfd,#fff)}
+.auth-left{flex:1;background:linear-gradient(135deg,#7b63ff,#5c3fe6);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:center}
+.auth-left h1{font-family:Manrope, sans-serif;font-weight:800;font-size:34px;margin:0 0 12px}
+.auth-left p{opacity:0.95;margin:0 0 20px}
+.auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:48px}
+.auth-card{width:100%;max-width:420px;background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(24,20,42,0.06);padding:28px}
+.auth-card h2{margin:0 0 14px}
+.auth-card .field{margin-bottom:12px}
+.auth-card input, .auth-card select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px}
+.auth-social{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.auth-footer{margin-top:16px;text-align:center;color:var(--muted)}
+
+@media (max-width:900px){
+  .auth-split{flex-direction:column}
+  .auth-left{padding:28px;text-align:center}
+  .auth-right{padding:20px}
+}
+
+/* Profile page styles */
+.profile-shell{display:flex;justify-content:center;padding:24px 16px;background:#F8FAFC;min-height:100vh}
+.profile-card{width:100%;max-width:650px;background:#fff;border-radius:24px;box-shadow:0 24px 60px rgba(41,35,81,.08);padding:24px 22px;display:grid;gap:18px}
+.profile-top{display:grid;gap:14px;justify-items:center;text-align:center}
+.profile-avatar-wrapper{position:relative;width:110px;height:110px}
+.profile-avatar{width:100%;height:100%;border-radius:50%;overflow:hidden;display:block;cursor:pointer;position:relative;transition:transform .25s ease,box-shadow .25s ease;box-shadow:0 20px 40px rgba(92,63,230,.18)}
+.profile-avatar:hover{transform:translateY(-2px)}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.avatar-overlay{position:absolute;right:0;bottom:0;width:36px;height:36px;background:linear-gradient(135deg,#7b63ff,#5c3fe6);border:3px solid #fff;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:14px;box-shadow:0 16px 28px rgba(79,53,198,.22)}
+.profile-meta h1{margin:0;font-size:32px;font-weight:800;color:#161620;letter-spacing:-.03em}
+.profile-detail{margin:4px 0 0;color:#6b7280;font-size:15px;line-height:1.5}
+.profile-action-button{width:280px;height:46px;border-radius:50px;padding:0 22px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;margin:0 auto}
+.profile-action-button:hover{box-shadow:0 18px 36px rgba(92,63,230,.18);transform:translateY(-1px)}
+.menu-card{display:grid;gap:8px}
+.menu-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;height:64px;border-radius:20px;background:#fff;border:1px solid #eef2ff;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.menu-row:hover{transform:translateY(-1px);box-shadow:0 16px 32px rgba(92,63,230,.08);border-color:#e7e5ff}
+.menu-icon{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#7b63ff,#5c3fe6);color:#fff;font-size:16px;flex-shrink:0}
+.menu-copy{display:grid;gap:2px;flex:1;text-align:left}
+.menu-copy strong{font-size:15px;color:#111827}
+.menu-copy span{font-size:13px;color:#6b7280}
+.menu-arrow{color:#c7d2fe;font-size:18px}
+.logout-row .menu-icon{background:linear-gradient(135deg,#f46d72,#f49d6c)}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:grid;place-items:center;padding:18px;z-index:20}
+.modal.hidden{display:none}
+.modal-card{width:100%;max-width:520px;background:#fff;border-radius:28px;box-shadow:0 30px 90px rgba(15,23,42,.16);padding:28px;display:grid;gap:20px}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.modal-header h2{font-size:22px;margin:0;color:#111827}
+.close-modal{border:0;background:transparent;font-size:24px;line-height:1;color:#6b7280;cursor:pointer}
+.edit-avatar{margin:0 auto}
+.profile-avatar-sm{width:96px;height:96px}
+.edit-row{display:grid;gap:10px}
+.edit-row label{font-size:14px;color:#4b5563;font-weight:600}
+.edit-row input,.edit-row textarea{width:100%;border:1px solid #e5e7eb;border-radius:18px;padding:14px;background:#fff;color:#111827;font:500 15px/1.4 'DM Sans',sans-serif}
+.edit-row textarea{min-height:110px;resize:vertical}
+.modal-actions{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap}
+.success-message{color:#0f766e;font-weight:700;font-size:14px}
+.support-contact{display:flex;gap:14px;align-items:center;padding:16px;border-radius:20px;background:#f8f3ff}
+.support-contact span{width:44px;height:44px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#7b63ff,#5c3fe6);color:#fff;font-size:20px}
+.about-card .about-grid{display:grid;gap:16px;margin-top:10px}
+.about-card strong{display:block;font-size:14px;color:#111827}
+.about-card p{margin:6px 0 0;color:#4b5563;line-height:1.7}
+.about-description{margin:12px 0 0;color:#4b5563;line-height:1.8}
+.footer-copy{margin-top:18px;color:#6b7280;font-size:13px;line-height:1.8;text-align:center}
+@media(max-width:720px){.profile-card{padding:28px}.profile-shell{padding:28px 16px}.profile-top{gap:18px}.profile-meta h1{font-size:28px}.profile-action-button{padding:14px}.menu-row{padding:16px}}
+@media(max-width:520px){.profile-card{padding:22px}.profile-action-button{font-size:15px}.menu-row{gap:14px;flex-direction:column;align-items:flex-start}.menu-arrow{align-self:center}}

@@ -6,3 +6,5 @@ spacy
 redis
 psycopg2-binary
 langchain
+bcrypt
+pyjwt
