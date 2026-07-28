@@ -15,6 +15,10 @@ PG_AVAILABLE = False
 DB_DRIVER = None
 psycopg2 = None
 pg8000 = None
+print("DATABASE_URL =", DATABASE_URL)
+print("USE_POSTGRES =", USE_POSTGRES)
+print("PG_HOST =", os.environ.get("PG_HOST"))
+print("PG_DATABASE =", os.environ.get("PG_DATABASE"))
 if USE_POSTGRES:
     try:
         import psycopg2
@@ -326,3 +330,49 @@ def update_user_password(email, password_hash):
         c.execute("UPDATE users SET password=? WHERE email=?", (password_hash, email))
         conn.commit()
         conn.close()
+if __name__ == "__main__":
+    print("========== DATABASE TEST ==========")
+
+    print("Backend:", get_db_backend())
+
+    try:
+        conn = get_connection()
+        print("Connection Successful!")
+
+        if PG_AVAILABLE:
+            cur = conn.cursor()
+
+            cur.execute("SELECT current_database();")
+            print("Database :", cur.fetchone()[0])
+
+            cur.execute("SELECT version();")
+            print("PostgreSQL Version :", cur.fetchone()[0])
+
+            # Test insert
+            cur.execute("""
+                INSERT INTO conversations(user_message, bot_response)
+                VALUES (%s, %s)
+            """, ("Test Message", "Test Response"))
+
+            conn.commit()
+            print("Test record inserted successfully.")
+
+            cur.close()
+        else:
+            print("Using SQLite database.")
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO conversations(user_message, bot_response)
+                VALUES (?, ?)
+            """, ("Test Message", "Test Response"))
+
+            conn.commit()
+            print("SQLite test record inserted.")
+
+            cur.close()
+
+        conn.close()
+
+    except Exception as e:
+        print("Connection Failed!")
+        print(e)
