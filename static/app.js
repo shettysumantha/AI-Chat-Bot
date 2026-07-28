@@ -79,5 +79,212 @@ document.getElementById('registerForm')?.addEventListener('submit', async e=>{
   if(j.error){ alert(j.error); } else { document.getElementById('registerView').classList.add('hidden'); loadCurrentUser(); }
 });
 
+const kbFileInput = document.getElementById('kbFileInput');
+const kbDropzone = document.getElementById('kbDropzone');
+const kbUploadStatus = document.getElementById('kbUploadStatus');
+const kbUploadedFiles = document.getElementById('kbUploadedFiles');
+const kbConversationList = document.getElementById('kbConversationList');
+const kbChatWindow = document.getElementById('kbChatWindow');
+const kbChatForm = document.getElementById('kbChatForm');
+const kbChatInput = document.getElementById('kbChatInput');
+const kbRefresh = document.getElementById('kbRefresh');
+const kbConversationTitle = document.getElementById('kbConversationTitle');
+const kbCreateModal = document.getElementById('kbCreateModal');
+const kbConversationName = document.getElementById('kbConversationName');
+const createKbConversation = document.getElementById('createKbConversation');
+const kbUploadSection = document.getElementById('kbUploadSection');
+let activeConversationId = null;
+let kbMode = 'upload';
+
+function showKbStatus(message, isError = false) {
+  kbUploadStatus.textContent = message;
+  kbUploadStatus.style.color = isError ? '#c0392b' : '#5d4ed7';
+}
+
+function renderUploadedFiles(files) {
+  kbUploadedFiles.innerHTML = '';
+  if (!files.length) {
+    kbUploadedFiles.innerHTML = '<div class="kb-empty">No documents uploaded yet.</div>';
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  files.forEach(file => {
+    const item = document.createElement('div'); item.className = 'kb-file-item'; item.innerHTML = `<strong>${file.file_name}</strong><div>${file.file_type} · ${(file.file_size / 1024).toFixed(1)} KB</div>`;
+    fragment.appendChild(item);
+  });
+  kbUploadedFiles.appendChild(fragment);
+}
+
+function renderConversations(conversations) {
+  kbConversationList.innerHTML = '';
+  if (!conversations.length) {
+    kbConversationList.innerHTML = '<div class="kb-empty">No conversations yet.</div>';
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  conversations.forEach(conversation => {
+    const item = document.createElement('button'); item.type = 'button'; item.className = `kb-conversation-item ${activeConversationId === conversation.id ? 'active' : ''}`;
+    item.innerHTML = `<strong>${conversation.title}</strong><div>${conversation.status || 'waiting_for_documents'}</div>`;
+    item.addEventListener('click', () => loadConversation(conversation.id));
+    fragment.appendChild(item);
+  });
+  kbConversationList.appendChild(fragment);
+}
+
+function renderHistory(history) {
+  kbChatWindow.innerHTML = '';
+  if (!history.length) {
+    kbChatWindow.innerHTML = '<div class="kb-empty">Start asking questions about your uploaded documents.</div>';
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  history.forEach(entry => {
+    const bubble = document.createElement('div'); bubble.className = `kb-chat-bubble ${entry.role === 'user' ? 'user' : 'assistant'}`; bubble.textContent = entry.message;
+    fragment.appendChild(bubble);
+  });
+  kbChatWindow.appendChild(fragment);
+  kbChatWindow.scrollTop = kbChatWindow.scrollHeight;
+}
+
+function showKbUploadState() {
+  kbUploadSection.classList.remove('hidden');
+  kbMode = 'upload';
+}
+
+function showKbChatState() {
+  kbUploadSection.classList.add('hidden');
+  kbMode = 'chat';
+}
+
+async function refreshKnowledgeBase() {
+  try {
+    const res = await fetch('/api/kb/conversations');
+    const data = await res.json();
+    if (data.error) {
+      showKbStatus(data.error, true);
+      return;
+    }
+    if (!activeConversationId && data.conversations.length) {
+      activeConversationId = data.conversations[0].id;
+    }
+    renderConversations(data.conversations);
+    if (activeConversationId) {
+      await loadConversation(activeConversationId);
+    }
+  } catch (e) {
+    showKbStatus('Unable to load conversations right now.', true);
+  }
+}
+
+async function loadConversation(conversationId) {
+  activeConversationId = conversationId;
+  try {
+    const res = await fetch(`/api/kb/conversation/${conversationId}`);
+    const data = await res.json();
+    if (data.error) {
+      showKbStatus(data.error, true);
+      return;
+    }
+    const conversation = data.conversation || {};
+    kbConversationTitle.textContent = conversation.title || 'Conversation';
+    if (conversation.status === 'ready_for_chat') {
+      showKbChatState();
+    } else {
+      showKbUploadState();
+    }
+    renderUploadedFiles(data.documents || []);
+    renderHistory(data.history || []);
+    const convRes = await fetch('/api/kb/conversations');
+    const convData = await convRes.json();
+    renderConversations(convData.conversations || []);
+  } catch (e) {
+    showKbStatus('Unable to load conversation.', true);
+  }
+}
+
+async function createConversation() {
+  const title = kbConversationName.value.trim();
+  if (!title || title.length < 3) {
+    alert('Please enter a conversation name with at least 3 characters.');
+    return;
+  }
+  try {
+    const res = await fetch('/api/kb/conversation', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title})});
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      alert(data.error || 'Unable to create conversation');
+      return;
+    }
+    activeConversationId = data.conversation.id;
+    kbConversationTitle.textContent = data.conversation.title;
+    kbConversationName.value = '';
+    kbCreateModal.classList.add('hidden');
+    showKbUploadState();
+    showKbStatus('New conversation is ready for documents.');
+    await refreshKnowledgeBase();
+    document.querySelector('[data-view="knowledge"]').click();
+  } catch (e) {
+    alert('Unable to create conversation.');
+  }
+}
+
+kbRefresh.addEventListener('click', refreshKnowledgeBase);
+
+kbDropzone.addEventListener('dragover', e => { e.preventDefault(); kbDropzone.classList.add('drag-over'); });
+kbDropzone.addEventListener('dragleave', () => kbDropzone.classList.remove('drag-over'));
+kbDropzone.addEventListener('drop', e => { e.preventDefault(); kbDropzone.classList.remove('drag-over'); const dt = new DataTransfer(); Array.from(e.dataTransfer.files).forEach(file => dt.items.add(file)); kbFileInput.files = dt.files; uploadKnowledgeFiles(); });
+kbDropzone.addEventListener('click', () => kbFileInput.click());
+kbFileInput.addEventListener('change', uploadKnowledgeFiles);
+
+async function uploadKnowledgeFiles() {
+  const files = Array.from(kbFileInput.files || []);
+  if (!files.length || !activeConversationId) return;
+  const formData = new FormData();
+  files.forEach(file => formData.append('files', file));
+  formData.append('conversation_id', activeConversationId);
+  showKbStatus('Uploading documents...');
+  try {
+    const res = await fetch('/api/kb/upload', {method:'POST', body: formData});
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      showKbStatus(data.error || 'Upload failed', true);
+      return;
+    }
+    showKbStatus('Processing complete. You can now chat.');
+    showKbChatState();
+    await refreshKnowledgeBase();
+  } catch (e) {
+    showKbStatus('Upload failed. Please try again.', true);
+  }
+}
+
+kbChatForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const message = kbChatInput.value.trim();
+  if (!message || !activeConversationId) return;
+  kbChatInput.value = '';
+  const bubble = document.createElement('div'); bubble.className = 'kb-chat-bubble user'; bubble.textContent = message; kbChatWindow.appendChild(bubble);
+  showKbStatus('Thinking...');
+  try {
+    const res = await fetch('/api/kb/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({conversation_id: activeConversationId, message})});
+    const data = await res.json();
+    const assistantBubble = document.createElement('div'); assistantBubble.className = 'kb-chat-bubble assistant'; assistantBubble.textContent = data.answer || 'I could not answer from the uploaded documents.'; kbChatWindow.appendChild(assistantBubble);
+    kbChatWindow.scrollTop = kbChatWindow.scrollHeight;
+    showKbStatus('Answer ready.');
+  } catch (e) {
+    showKbStatus('Unable to answer right now.', true);
+  }
+});
+
+document.getElementById('newChat').addEventListener('click', () => {
+  kbConversationName.value = '';
+  kbCreateModal.classList.remove('hidden');
+  kbConversationName.focus();
+});
+
+createKbConversation.addEventListener('click', createConversation);
+Array.from(document.querySelectorAll('[data-close="kbCreateModal"]')).forEach(btn => btn.addEventListener('click', () => kbCreateModal.classList.add('hidden')));
+
 // initialize
 loadCurrentUser();
+refreshKnowledgeBase();

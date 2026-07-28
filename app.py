@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory, session
 from models.chatbot import Chatbot
 from database.db import init_db, save_message, create_user, get_user_by_email, get_user_by_id, update_user_photo, update_user_profile, update_user_password, print_db_backend
+from routes.knowledge_base_routes import knowledge_bp
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -50,6 +51,8 @@ from email.message import EmailMessage
 app = Flask(__name__, static_folder="static")
 app.secret_key = os.environ.get('FLASK_SECRET', 'dev-secret')
 bot = Chatbot()
+
+app.register_blueprint(knowledge_bp)
 
 init_db()
 print_db_backend()
@@ -188,7 +191,6 @@ def chat():
     response = bot.get_response(message)
     save_message(message, response)
     return jsonify({"response": response})
-
 
 # Authentication routes
 @app.route('/register', methods=['POST'])

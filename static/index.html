@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="/static/auth.css">
+  <link rel="stylesheet" href="/static/knowledge.css">
 </head>
 <body>
   <main class="app-shell">
@@ -51,7 +52,36 @@
 
         <section class="workspace hidden" id="knowledgeView">
           <header class="topbar"><div><p class="eyebrow">KNOWLEDGE BASE</p><h1>Knowledge base</h1></div></header>
-          <div class="content-grid"><div class="card"><h3>No knowledge sources yet</h3><p>Add documents or integrations to let Nexa answer from your data.</p><button id="addKnowledge">Add a source</button></div></div>
+          <div class="content-grid knowledge-grid">
+            <div class="card knowledge-card">
+              <div class="kb-chat-header">
+                <h3 id="kbConversationTitle">Conversation</h3>
+                <button type="button" id="kbRefresh" class="button button-outline">Refresh</button>
+              </div>
+              <div id="kbUploadSection" class="kb-upload-section">
+                <div id="kbDropzone" class="kb-dropzone">
+                  <input type="file" id="kbFileInput" multiple accept=".pdf,.docx,.txt,.csv,.xlsx,.pptx,.md" hidden>
+                  <p><strong>Drop files here</strong></p>
+                  <p>or</p>
+                  <button type="button" id="kbBrowse" class="button button-primary">Browse files</button>
+                  <small>Maximum 3 files · 20 MB each</small>
+                </div>
+                <div id="kbUploadStatus" class="kb-status"></div>
+                <div id="kbUploadedFiles" class="kb-file-list"></div>
+              </div>
+            </div>
+            <div class="card knowledge-card">
+              <div class="kb-chat-header">
+                <h3>Conversations</h3>
+              </div>
+              <div id="kbConversationList" class="kb-conversation-list"></div>
+              <div id="kbChatWindow" class="kb-chat-window"></div>
+              <form id="kbChatForm" class="kb-chat-form">
+                <input id="kbChatInput" type="text" placeholder="Ask a question about your uploaded documents" />
+                <button type="submit" class="button button-primary">Send</button>
+              </form>
+            </div>
+          </div>
         </section>
 
         <section class="workspace hidden" id="settingsView">
@@ -133,6 +163,21 @@
             <div class="modal-header"><h2>Logout</h2><button class="close-modal" data-close="logoutModal">×</button></div>
             <p>Are you sure you want to logout?</p>
             <div class="modal-actions"><button class="button button-outline" data-close="logoutModal">Cancel</button><button id="confirmLogout" class="button button-primary">Logout</button></div>
+          </div>
+        </div>
+
+        <div class="modal hidden" id="kbCreateModal">
+          <div class="modal-card">
+            <div class="modal-header"><h2>New Knowledge Base Conversation</h2><button class="close-modal" data-close="kbCreateModal">×</button></div>
+            <div class="edit-row">
+              <label for="kbConversationName">Conversation Name</label>
+              <input id="kbConversationName" type="text" placeholder="HR Policies" maxlength="100">
+            </div>
+            <p class="kb-modal-hint">Choose a clear name for your document workspace.</p>
+            <div class="modal-actions">
+              <button class="button button-outline" data-close="kbCreateModal">Cancel</button>
+              <button id="createKbConversation" class="button button-primary">Create</button>
+            </div>
           </div>
         </div>
       </main>
