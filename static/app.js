@@ -274,9 +274,7 @@ async function uploadKnowledgeFiles() {
     selectedKbFiles = [];
     kbFileInput.value = '';
     kbSubmitButton.classList.add('hidden');
-    showKbStatus('Completed');
-    showKbChatState();
-    await refreshKnowledgeBase();
+    window.location.assign(data.redirect_url || `/conversations/${data.conversation_id}`);
   } catch (e) {
     showKbStatus('Upload failed. Please try again.', true);
   } finally {
@@ -317,3 +315,69 @@ Array.from(document.querySelectorAll('[data-close="kbCreateModal"]')).forEach(bt
 // initialize
 loadCurrentUser();
 refreshKnowledgeBase();
+
+// Main conversations reuse the persisted KB conversation and its document context.
+let mainConversationId = null;
+
+async function sendMessage(text) {
+  const message = (text || input.value).trim(); if (!message) return;
+  addMessage(message, 'user'); updateStats(); input.value = ''; input.style.height = '23px';
+  const button = form.querySelector('.send-button'); button.disabled = true;
+  const typing = document.createElement('article'); typing.className = 'message bot-message';
+  typing.innerHTML = '<div class="bot-avatar">AI</div><div class="message-content"><div class="message-meta"><strong>Nexa AI</strong><time>Thinking</time></div><div class="bubble">...</div></div>';
+  messages.appendChild(typing); messages.scrollTop = messages.scrollHeight;
+  try {
+    const endpoint = mainConversationId ? '/api/kb/chat' : '/chat';
+    const payload = mainConversationId ? {conversation_id: mainConversationId, message} : {message};
+    const response = await fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    const data = await response.json(); typing.remove();
+    addMessage(data.answer || data.response || 'I am here to help. Could you try again?', 'bot');
+  } catch (_) { typing.remove(); addMessage('I am having trouble connecting right now. Please try again in a moment.', 'bot'); }
+  finally { button.disabled = false; updateStats(); input.focus(); }
+}
+
+function showMainConversation(conversation, messagesHistory) {
+  mainConversationId = conversation.id;
+  document.querySelector('.chat-heading h2').textContent = conversation.title;
+  messages.innerHTML = '';
+  messagesHistory.forEach(entry => addMessage(entry.message, entry.role === 'assistant' ? 'bot' : 'user'));
+}
+
+async function loadRecentConversations() {
+  const container = document.getElementById('recentConversations');
+  try {
+    const res = await fetch('/api/conversations/recent'); const data = await res.json();
+    if (!res.ok || !data.conversations) return;
+    container.innerHTML = '';
+    data.conversations.forEach(conversation => {
+      const button = document.createElement('button'); button.type = 'button';
+      button.className = `recent-conversation ${mainConversationId === conversation.id ? 'active' : ''}`;
+      button.textContent = conversation.title;
+      button.addEventListener('click', () => loadMainConversation(conversation.id));
+      container.appendChild(button);
+    });
+  } catch (_) { /* Unauthenticated users have no recent conversations. */ }
+}
+
+async function loadMainConversation(conversationId, updateUrl = true) {
+  const res = await fetch(`/api/kb/conversation/${conversationId}`); const data = await res.json();
+  if (!res.ok || data.error || !data.conversation) return;
+  document.querySelector('[data-view="chat"]').click();
+  showMainConversation(data.conversation, data.history || []);
+  if (updateUrl) history.pushState({}, '', `/conversations/${conversationId}`);
+  await loadRecentConversations();
+}
+
+loadRecentConversations();
+const mainConversationMatch = window.location.pathname.match(/^\/conversations\/(\d+)$/);
+if (mainConversationMatch) loadMainConversation(Number(mainConversationMatch[1]), false);
+
+// The conversation titles are a submenu of the Conversations navigation item.
+const conversationsMenu = document.querySelector('[data-view="chat"]');
+const conversationSubmenu = document.getElementById('conversationSubmenu');
+conversationsMenu.after(conversationSubmenu);
+conversationsMenu.addEventListener('click', () => {
+  conversationSubmenu.classList.toggle('hidden');
+  loadRecentConversations();
+});
+if (mainConversationMatch) conversationSubmenu.classList.remove('hidden');

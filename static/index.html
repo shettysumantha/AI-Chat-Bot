@@ -10,6 +10,12 @@
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="/static/auth.css">
   <link rel="stylesheet" href="/static/knowledge.css">
+  <style>
+    .recent-conversations { padding: 18px 12px 0; }
+    .recent-conversations p { margin: 0 0 8px; color: #a29fad; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .recent-conversation { display: block; width: 100%; overflow: hidden; border: 0; border-radius: 8px; padding: 8px 0; background: transparent; color: #6d6b7b; cursor: pointer; font: 500 12px 'DM Sans'; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+    .recent-conversation.active { color: #5d4ed7; font-weight: 700; }
+  </style>
 </head>
 <body>
   <main class="app-shell">
@@ -22,6 +28,10 @@
         <a class="nav-link" href="#knowledge" data-view="knowledge"><span>◌</span> Knowledge base</a>
         <a class="nav-link" href="#settings" data-view="settings"><span>⚙</span> Settings</a>
       </nav>
+      <section id="conversationSubmenu" class="recent-conversations hidden" aria-label="Conversations">
+        <p>All conversations</p>
+        <div id="recentConversations"></div>
+      </section>
       <div class="sidebar-bottom">
         <div class="upgrade-card"><span class="spark">✦</span><strong>Unlock more with Pro</strong><p>Get advanced AI tools &amp; insights.</p><button>Explore Pro</button></div>
         <div class="profile"><div class="avatar small">SK</div><div><strong>Sumantha K</strong><span>Workspace owner</span></div><button aria-label="Profile menu">···</button></div>

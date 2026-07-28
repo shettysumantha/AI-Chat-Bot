@@ -63,6 +63,12 @@ def home():
     return send_from_directory("static", "index.html")
 
 
+@app.route('/conversations/<int:conversation_id>')
+def conversation_page(conversation_id):
+    """Serve the existing main workspace; the client loads this conversation."""
+    return send_from_directory("static", "index.html")
+
+
 # Serve dedicated auth pages
 @app.route('/login', methods=['GET'])
 def login_page():

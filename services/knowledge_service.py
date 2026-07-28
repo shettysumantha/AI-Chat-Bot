@@ -83,7 +83,7 @@ class KnowledgeService:
         self._ensure_user(user_id)
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT fn_get_user_conversations(%s)", (user_id,))
+        cur.execute("SELECT * FROM fn_get_user_conversations(%s)", (user_id,))
         rows = cur.fetchall()
         cur.close()
         conn.close()
@@ -98,23 +98,38 @@ class KnowledgeService:
             for row in rows
         ]
 
+    def get_recent_conversations(self, user_id: int) -> List[Dict[str, Any]]:
+        """Return ready conversations for the signed-in user's sidebar submenu."""
+        self._ensure_user(user_id)
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM fn_get_recent_conversations(%s)", (user_id,))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [
+            {'id': row[0], 'title': row[1], 'status': row[2],
+             'created_at': row[3], 'updated_at': row[4]}
+            for row in rows
+        ]
+
     def get_conversation(self, user_id: int, conversation_id: int) -> Dict[str, Any]:
         self._ensure_user(user_id)
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT fn_get_conversation(%s, %s)", (user_id, conversation_id))
+        cur.execute("SELECT * FROM fn_get_conversation(%s, %s)", (user_id, conversation_id))
         row = cur.fetchone()
         cur.close()
         conn.close()
-        if not row or not row[0]:
+        if not row:
             return {}
-        return {'id': row[0][0], 'title': row[0][1], 'status': row[0][2], 'created_at': row[0][3], 'updated_at': row[0][4]}
+        return {'id': row[0], 'title': row[1], 'status': row[2], 'created_at': row[3], 'updated_at': row[4]}
 
     def get_conversation_documents(self, user_id: int, conversation_id: int) -> List[Dict[str, Any]]:
         self._ensure_user(user_id)
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT fn_get_documents_by_conversation(%s, %s)", (user_id, conversation_id))
+        cur.execute("SELECT * FROM fn_get_documents_by_conversation(%s, %s)", (user_id, conversation_id))
         rows = cur.fetchall()
         cur.close()
         conn.close()
@@ -135,7 +150,7 @@ class KnowledgeService:
         self._ensure_user(user_id)
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT fn_get_chat_history(%s, %s)", (user_id, conversation_id))
+        cur.execute("SELECT * FROM fn_get_chat_history(%s, %s)", (user_id, conversation_id))
         rows = cur.fetchall()
         cur.close()
         conn.close()
@@ -198,6 +213,16 @@ class KnowledgeService:
         cur.close()
         conn.close()
 
+    def mark_conversation_ready(self, user_id: int, conversation_id: int) -> None:
+        """Finish indexing and place this persisted conversation in Recent."""
+        self._ensure_user(user_id)
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT fn_mark_conversation_ready(%s, %s)", (user_id, conversation_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+
     def answer_question(self, user_id: int, conversation_id: int, question: str) -> str:
         self._ensure_user(user_id)
         documents = self.get_conversation_documents(user_id, conversation_id)
@@ -206,7 +231,7 @@ class KnowledgeService:
         chunks = []
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT fn_get_document_chunks(%s, %s)", (user_id, conversation_id))
+        cur.execute("SELECT * FROM fn_get_document_chunks(%s, %s)", (user_id, conversation_id))
         rows = cur.fetchall()
         chunks = [row[2] for row in rows]
         cur.close()

@@ -58,18 +58,27 @@ def upload_documents():
         document = knowledge_service.save_document(user_id, conversation_id, file_storage, save_path)
         knowledge_service.index_document(user_id, conversation_id, document['id'], save_path, document['file_type'])
         uploaded.append(document)
-    knowledge_service.set_conversation_status(user_id, conversation_id, 'completed')
+    knowledge_service.mark_conversation_ready(user_id, conversation_id)
     knowledge_service.save_chat_message(
         user_id,
         conversation_id,
         'assistant',
         'Your documents have been processed successfully.\n\nYou can now ask questions based on the uploaded documents.',
     )
-    return jsonify({'ok': True, 'conversation_id': conversation_id, 'documents': uploaded})
+    return jsonify({'ok': True, 'conversation_id': conversation_id, 'documents': uploaded,
+                    'redirect_url': f'/conversations/{conversation_id}'})
 
 
 @knowledge_bp.route('/api/kb/conversations', methods=['GET'])
 def get_conversations():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    return jsonify({'conversations': knowledge_service.get_conversations(user_id)})
+
+
+@knowledge_bp.route('/api/conversations/recent', methods=['GET'])
+def get_recent_conversations():
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Unauthorized'}), 401
