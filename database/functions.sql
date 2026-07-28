@@ -40,11 +40,23 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION fn_save_document_chunk(p_document_id BIGINT, p_chunk_index INT, p_chunk_text TEXT)
+CREATE OR REPLACE FUNCTION fn_save_document_chunk(p_document_id BIGINT, p_chunk_index INT, p_chunk_text TEXT, p_embedding TEXT DEFAULT NULL)
 RETURNS VOID AS $$
 BEGIN
-    INSERT INTO kb_document_chunks(document_id, chunk_index, chunk_text, created_at)
-    VALUES (p_document_id, p_chunk_index, p_chunk_text, NOW());
+    INSERT INTO kb_document_chunks(document_id, chunk_index, chunk_text, embedding, created_at)
+    VALUES (p_document_id, p_chunk_index, p_chunk_text, p_embedding, NOW());
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_get_document_chunks(p_user_id BIGINT, p_conversation_id BIGINT)
+RETURNS TABLE(document_id BIGINT, chunk_index INT, chunk_text TEXT, embedding TEXT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT dc.document_id, dc.chunk_index, dc.chunk_text, dc.embedding
+    FROM kb_document_chunks dc
+    JOIN kb_documents d ON d.id = dc.document_id
+    WHERE d.user_id = p_user_id AND d.conversation_id = p_conversation_id
+    ORDER BY dc.document_id, dc.chunk_index;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -59,6 +71,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION fn_get_conversation(p_user_id BIGINT, p_conversation_id BIGINT)
+RETURNS TABLE(id BIGINT, title TEXT, status TEXT, created_at TIMESTAMP, updated_at TIMESTAMP) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT kc.id, kc.title, kc.status, kc.created_at, kc.updated_at
+    FROM kb_conversations kc
+    WHERE kc.user_id = p_user_id AND kc.id = p_conversation_id;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION fn_get_conversation_documents(p_user_id BIGINT, p_conversation_id BIGINT)
 RETURNS TABLE(id BIGINT, file_name TEXT, file_path TEXT, file_size BIGINT, file_type TEXT, status TEXT, uploaded_at TIMESTAMP) AS $$
 BEGIN
@@ -67,6 +89,14 @@ BEGIN
     FROM kb_documents kd
     WHERE kd.user_id = p_user_id AND kd.conversation_id = p_conversation_id
     ORDER BY kd.uploaded_at DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_get_documents_by_conversation(p_user_id BIGINT, p_conversation_id BIGINT)
+RETURNS TABLE(id BIGINT, file_name TEXT, file_path TEXT, file_size BIGINT, file_type TEXT, status TEXT, uploaded_at TIMESTAMP) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM fn_get_conversation_documents(p_user_id, p_conversation_id);
 END;
 $$ LANGUAGE plpgsql;
 

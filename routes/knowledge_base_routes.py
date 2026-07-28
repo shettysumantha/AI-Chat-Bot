@@ -22,7 +22,10 @@ def create_conversation():
         return jsonify({'error': 'Conversation name must be at least 3 characters'}), 400
     if len(title) > 100:
         return jsonify({'error': 'Conversation name cannot exceed 100 characters'}), 400
-    conversation_id = knowledge_service.create_conversation(user_id, title)
+    try:
+        conversation_id = knowledge_service.create_conversation(user_id, title)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 409
     return jsonify({'ok': True, 'conversation': {'id': conversation_id, 'title': title, 'status': 'waiting_for_documents'}})
 
 
@@ -40,6 +43,11 @@ def upload_documents():
     conversation_id = request.form.get('conversation_id', type=int)
     if not conversation_id:
         return jsonify({'error': 'Conversation is required'}), 400
+    conversation = knowledge_service.get_conversation(user_id, conversation_id)
+    if not conversation:
+        return jsonify({'error': 'Conversation not found'}), 404
+    if conversation['status'] == 'completed':
+        return jsonify({'error': 'Documents have already been submitted for this conversation'}), 409
     knowledge_service.set_conversation_status(user_id, conversation_id, 'processing')
     uploaded = []
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -50,7 +58,13 @@ def upload_documents():
         document = knowledge_service.save_document(user_id, conversation_id, file_storage, save_path)
         knowledge_service.index_document(user_id, conversation_id, document['id'], save_path, document['file_type'])
         uploaded.append(document)
-    knowledge_service.set_conversation_status(user_id, conversation_id, 'ready_for_chat')
+    knowledge_service.set_conversation_status(user_id, conversation_id, 'completed')
+    knowledge_service.save_chat_message(
+        user_id,
+        conversation_id,
+        'assistant',
+        'Your documents have been processed successfully.\n\nYou can now ask questions based on the uploaded documents.',
+    )
     return jsonify({'ok': True, 'conversation_id': conversation_id, 'documents': uploaded})
 
 

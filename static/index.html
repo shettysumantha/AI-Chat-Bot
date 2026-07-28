@@ -68,18 +68,21 @@
                 </div>
                 <div id="kbUploadStatus" class="kb-status"></div>
                 <div id="kbUploadedFiles" class="kb-file-list"></div>
+                <button type="button" id="kbSubmitButton" class="button button-primary hidden">Submit Documents</button>
               </div>
             </div>
-            <div class="card knowledge-card">
+            <div id="kbSideCard" class="card knowledge-card">
               <div class="kb-chat-header">
                 <h3>Conversations</h3>
               </div>
-              <div id="kbConversationList" class="kb-conversation-list"></div>
-              <div id="kbChatWindow" class="kb-chat-window"></div>
-              <form id="kbChatForm" class="kb-chat-form">
-                <input id="kbChatInput" type="text" placeholder="Ask a question about your uploaded documents" />
-                <button type="submit" class="button button-primary">Send</button>
-              </form>
+              <div id="kbConversationPanel" class="kb-conversation-panel hidden">
+                <div id="kbConversationList" class="kb-conversation-list"></div>
+                <div id="kbChatWindow" class="kb-chat-window"></div>
+                <form id="kbChatForm" class="kb-chat-form">
+                  <input id="kbChatInput" type="text" placeholder="Ask a question about your uploaded documents" />
+                  <button type="submit" class="button button-primary">Send</button>
+                </form>
+              </div>
             </div>
           </div>
         </section>

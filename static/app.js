@@ -93,8 +93,12 @@ const kbCreateModal = document.getElementById('kbCreateModal');
 const kbConversationName = document.getElementById('kbConversationName');
 const createKbConversation = document.getElementById('createKbConversation');
 const kbUploadSection = document.getElementById('kbUploadSection');
+const kbSubmitButton = document.getElementById('kbSubmitButton');
+const kbConversationPanel = document.getElementById('kbConversationPanel');
+const kbSideCard = document.getElementById('kbSideCard');
 let activeConversationId = null;
 let kbMode = 'upload';
+let selectedKbFiles = [];
 
 function showKbStatus(message, isError = false) {
   kbUploadStatus.textContent = message;
@@ -109,7 +113,10 @@ function renderUploadedFiles(files) {
   }
   const fragment = document.createDocumentFragment();
   files.forEach(file => {
-    const item = document.createElement('div'); item.className = 'kb-file-item'; item.innerHTML = `<strong>${file.file_name}</strong><div>${file.file_type} · ${(file.file_size / 1024).toFixed(1)} KB</div>`;
+    const name = file.file_name || file.name;
+    const type = file.file_type || (name.includes('.') ? name.slice(name.lastIndexOf('.')) : 'file');
+    const size = file.file_size || file.size || 0;
+    const item = document.createElement('div'); item.className = 'kb-file-item'; item.innerHTML = `<strong>${name}</strong><div>${type} · ${(size / 1024).toFixed(1)} KB</div>`;
     fragment.appendChild(item);
   });
   kbUploadedFiles.appendChild(fragment);
@@ -148,11 +155,15 @@ function renderHistory(history) {
 
 function showKbUploadState() {
   kbUploadSection.classList.remove('hidden');
+  kbSideCard.classList.add('hidden');
+  kbConversationPanel.classList.add('hidden');
   kbMode = 'upload';
 }
 
 function showKbChatState() {
   kbUploadSection.classList.add('hidden');
+  kbSideCard.classList.remove('hidden');
+  kbConversationPanel.classList.remove('hidden');
   kbMode = 'chat';
 }
 
@@ -187,7 +198,7 @@ async function loadConversation(conversationId) {
     }
     const conversation = data.conversation || {};
     kbConversationTitle.textContent = conversation.title || 'Conversation';
-    if (conversation.status === 'ready_for_chat') {
+    if (conversation.status === 'completed') {
       showKbChatState();
     } else {
       showKbUploadState();
@@ -221,7 +232,6 @@ async function createConversation() {
     kbCreateModal.classList.add('hidden');
     showKbUploadState();
     showKbStatus('New conversation is ready for documents.');
-    await refreshKnowledgeBase();
     document.querySelector('[data-view="knowledge"]').click();
   } catch (e) {
     alert('Unable to create conversation.');
@@ -232,17 +242,28 @@ kbRefresh.addEventListener('click', refreshKnowledgeBase);
 
 kbDropzone.addEventListener('dragover', e => { e.preventDefault(); kbDropzone.classList.add('drag-over'); });
 kbDropzone.addEventListener('dragleave', () => kbDropzone.classList.remove('drag-over'));
-kbDropzone.addEventListener('drop', e => { e.preventDefault(); kbDropzone.classList.remove('drag-over'); const dt = new DataTransfer(); Array.from(e.dataTransfer.files).forEach(file => dt.items.add(file)); kbFileInput.files = dt.files; uploadKnowledgeFiles(); });
+kbDropzone.addEventListener('drop', e => { e.preventDefault(); kbDropzone.classList.remove('drag-over'); const dt = new DataTransfer(); Array.from(e.dataTransfer.files).forEach(file => dt.items.add(file)); kbFileInput.files = dt.files; selectKnowledgeFiles(); });
 kbDropzone.addEventListener('click', () => kbFileInput.click());
-kbFileInput.addEventListener('change', uploadKnowledgeFiles);
+document.getElementById('kbBrowse').addEventListener('click', e => { e.stopPropagation(); kbFileInput.click(); });
+kbFileInput.addEventListener('change', selectKnowledgeFiles);
+
+function selectKnowledgeFiles() {
+  selectedKbFiles = Array.from(kbFileInput.files || []);
+  if (!selectedKbFiles.length) return;
+  renderUploadedFiles(selectedKbFiles);
+  kbSubmitButton.classList.remove('hidden');
+  showKbStatus(`${selectedKbFiles.length} file${selectedKbFiles.length === 1 ? '' : 's'} selected. Click Submit Documents to continue.`);
+}
 
 async function uploadKnowledgeFiles() {
-  const files = Array.from(kbFileInput.files || []);
+  const files = selectedKbFiles;
   if (!files.length || !activeConversationId) return;
   const formData = new FormData();
   files.forEach(file => formData.append('files', file));
   formData.append('conversation_id', activeConversationId);
-  showKbStatus('Uploading documents...');
+  kbSubmitButton.disabled = true;
+  showKbStatus('Uploading...');
+  const progressTimer = window.setTimeout(() => showKbStatus('Reading Documents...'), 250);
   try {
     const res = await fetch('/api/kb/upload', {method:'POST', body: formData});
     const data = await res.json();
@@ -250,13 +271,21 @@ async function uploadKnowledgeFiles() {
       showKbStatus(data.error || 'Upload failed', true);
       return;
     }
-    showKbStatus('Processing complete. You can now chat.');
+    selectedKbFiles = [];
+    kbFileInput.value = '';
+    kbSubmitButton.classList.add('hidden');
+    showKbStatus('Completed');
     showKbChatState();
     await refreshKnowledgeBase();
   } catch (e) {
     showKbStatus('Upload failed. Please try again.', true);
+  } finally {
+    window.clearTimeout(progressTimer);
+    kbSubmitButton.disabled = false;
   }
 }
+
+kbSubmitButton.addEventListener('click', uploadKnowledgeFiles);
 
 kbChatForm.addEventListener('submit', async e => {
   e.preventDefault();

@@ -61,11 +61,13 @@ class KnowledgeService:
         }
 
     def save_chunk(self, document_id: int, chunk_index: int, chunk_text: str) -> None:
+        # Store a stable embedding placeholder until an embedding provider is configured.
+        embedding = hashlib.sha256(chunk_text.encode('utf-8')).hexdigest()
         conn = get_connection()
         cur = conn.cursor()
         cur.execute(
-            "SELECT fn_save_document_chunk(%s, %s, %s)",
-            (document_id, chunk_index, chunk_text),
+            "SELECT fn_save_document_chunk(%s, %s, %s, %s)",
+            (document_id, chunk_index, chunk_text, embedding),
         )
         conn.commit()
         cur.close()
@@ -100,19 +102,19 @@ class KnowledgeService:
         self._ensure_user(user_id)
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id, title, status, created_at, updated_at FROM kb_conversations WHERE user_id=%s AND id=%s", (user_id, conversation_id))
+        cur.execute("SELECT fn_get_conversation(%s, %s)", (user_id, conversation_id))
         row = cur.fetchone()
         cur.close()
         conn.close()
-        if not row:
+        if not row or not row[0]:
             return {}
-        return {'id': row[0], 'title': row[1], 'status': row[2], 'created_at': row[3], 'updated_at': row[4]}
+        return {'id': row[0][0], 'title': row[0][1], 'status': row[0][2], 'created_at': row[0][3], 'updated_at': row[0][4]}
 
     def get_conversation_documents(self, user_id: int, conversation_id: int) -> List[Dict[str, Any]]:
         self._ensure_user(user_id)
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT fn_get_conversation_documents(%s, %s)", (user_id, conversation_id))
+        cur.execute("SELECT fn_get_documents_by_conversation(%s, %s)", (user_id, conversation_id))
         rows = cur.fetchall()
         cur.close()
         conn.close()
@@ -204,11 +206,9 @@ class KnowledgeService:
         chunks = []
         conn = get_connection()
         cur = conn.cursor()
-        for document in documents:
-            cur.execute("SELECT chunk_text FROM kb_document_chunks WHERE document_id=%s ORDER BY chunk_index", (document['id'],))
-            rows = cur.fetchall()
-            for row in rows:
-                chunks.append(row[0])
+        cur.execute("SELECT fn_get_document_chunks(%s, %s)", (user_id, conversation_id))
+        rows = cur.fetchall()
+        chunks = [row[2] for row in rows]
         cur.close()
         conn.close()
         relevant = []

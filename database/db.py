@@ -125,6 +125,8 @@ def init_db():
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("DROP FUNCTION IF EXISTS fn_get_user_conversations(bigint)")
+    cur.execute("DROP FUNCTION IF EXISTS fn_get_conversation(bigint, bigint)")
+    cur.execute("DROP FUNCTION IF EXISTS fn_get_documents_by_conversation(bigint, bigint)")
     cur.execute("DROP FUNCTION IF EXISTS fn_update_conversation_status(bigint, bigint, text)")
     cur.execute(function_sql)
     conn.commit()
