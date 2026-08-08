@@ -94,6 +94,7 @@ def init_db():
         print("WARNING: Database unavailable during startup; continuing without bootstrapping tables.", exc)
         return False
 
+    cur = None
     try:
         cur = conn.cursor()
         cur.execute(
@@ -129,10 +130,8 @@ def init_db():
         conn.rollback()
         return False
     finally:
-        try:
+        if cur is not None:
             cur.close()
-        except Exception:
-            pass
         conn.close()
 
     function_sql = Path(__file__).with_name('functions.sql').read_text(encoding='utf-8')
@@ -151,11 +150,10 @@ def init_db():
             conn.rollback()
         return False
     finally:
-        try:
+        if cur is not None:
             cur.close()
-        except Exception:
-            pass
-        conn.close()
+        if conn is not None:
+            conn.close()
 
     return True
 

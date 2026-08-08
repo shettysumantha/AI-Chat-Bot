@@ -21,5 +21,6 @@ class InitDbTests(unittest.TestCase):
         with patch.object(db, "get_connection", side_effect=Exception("db unavailable")):
             self.assertFalse(db.update_user_password("jane@example.com", "hash"))
 
+
 if __name__ == "__main__":
     unittest.main()

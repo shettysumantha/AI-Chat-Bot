@@ -201,43 +201,46 @@ def chat():
 # Authentication routes
 @app.route('/register', methods=['POST'])
 def register():
-    data = request.json
-    name = data.get('name')
-    email = data.get('email')
-    phone = data.get('phone')
-    password = data.get('password')
-    if not (name and email and password):
-        return jsonify({'error': 'Missing fields'}), 400
-    # Hash password (bcrypt preferred when available)
-    pw_hash = hash_password(password)
-    uid = create_user(name, email, phone, pw_hash)
-    if not uid:
-        return jsonify({'error': 'User exists or could not be created'}), 400
-    session['user_id'] = uid
-    return jsonify({'id': uid, 'name': name, 'email': email, 'phone': phone})
+    try:
+        data = request.json or {}
+        name = data.get('name')
+        email = data.get('email')
+        phone = data.get('phone')
+        password = data.get('password')
+        if not (name and email and password):
+            return jsonify({'error': 'Missing fields'}), 400
+        pw_hash = hash_password(password)
+        uid = create_user(name, email, phone, pw_hash)
+        if not uid:
+            return jsonify({'error': 'User exists or could not be created'}), 400
+        session['user_id'] = uid
+        return jsonify({'id': uid, 'name': name, 'email': email, 'phone': phone})
+    except Exception as exc:
+        return jsonify({'error': f'Registration failed: {exc}'}), 500
 
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.json
-    email = data.get('email')
-    password = data.get('password')
-    user = get_user_by_email(email)
-    if not user:
-        return jsonify({'error': 'Invalid credentials'}), 401
-    # user row: id,name,email,phone,password,photo,is_admin
-    uid, name, uemail, phone, pw_hash, photo, is_admin = user
-    # Verify password against stored hash (supports bcrypt or werkzeug)
-    if not verify_password(pw_hash, password):
-        return jsonify({'error': 'Invalid credentials'}), 401
-    session['user_id'] = uid
-    response = {'id': uid, 'name': name, 'email': uemail, 'phone': phone, 'photo': photo, 'is_admin': is_admin}
-    if JWT_AVAILABLE:
-        try:
-            response['token'] = jwt.encode({'sub': uid, 'exp': datetime.utcnow() + timedelta(hours=4)}, app.secret_key, algorithm='HS256')
-        except Exception:
-            response['token'] = None
-    return jsonify(response)
+    try:
+        data = request.json or {}
+        email = data.get('email')
+        password = data.get('password')
+        user = get_user_by_email(email)
+        if not user:
+            return jsonify({'error': 'Invalid credentials'}), 401
+        uid, name, uemail, phone, pw_hash, photo, is_admin = user
+        if not verify_password(pw_hash, password):
+            return jsonify({'error': 'Invalid credentials'}), 401
+        session['user_id'] = uid
+        response = {'id': uid, 'name': name, 'email': uemail, 'phone': phone, 'photo': photo, 'is_admin': is_admin}
+        if JWT_AVAILABLE:
+            try:
+                response['token'] = jwt.encode({'sub': uid, 'exp': datetime.utcnow() + timedelta(hours=4)}, app.secret_key, algorithm='HS256')
+            except Exception:
+                response['token'] = None
+        return jsonify(response)
+    except Exception as exc:
+        return jsonify({'error': f'Login failed: {exc}'}), 500
 
 
 @app.route('/logout', methods=['POST'])
