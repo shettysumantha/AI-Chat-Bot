@@ -88,50 +88,76 @@ def get_connection():
 
 
 def init_db():
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS conversations(
-            id BIGSERIAL PRIMARY KEY,
-            user_message TEXT,
-            bot_response TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    try:
+        conn = get_connection()
+    except Exception as exc:
+        print("WARNING: Database unavailable during startup; continuing without bootstrapping tables.", exc)
+        return False
+
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS conversations(
+                id BIGSERIAL PRIMARY KEY,
+                user_message TEXT,
+                bot_response TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
         )
-        """
-    )
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS users(
-            id BIGSERIAL PRIMARY KEY,
-            name VARCHAR(100),
-            email VARCHAR(255) UNIQUE,
-            phone VARCHAR(20),
-            password TEXT,
-            photo TEXT,
-            is_admin BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users(
+                id BIGSERIAL PRIMARY KEY,
+                name VARCHAR(100),
+                email VARCHAR(255) UNIQUE,
+                phone VARCHAR(20),
+                password TEXT,
+                photo TEXT,
+                is_admin BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
         )
-        """
-    )
-    cur.execute(Path(__file__).with_name('tables.sql').read_text(encoding='utf-8'))
-    cur.execute("ALTER TABLE kb_conversations ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'waiting_for_documents'")
-    cur.execute("ALTER TABLE kb_documents ADD COLUMN IF NOT EXISTS checksum TEXT")
-    conn.commit()
-    cur.close()
-    conn.close()
+        cur.execute(Path(__file__).with_name('tables.sql').read_text(encoding='utf-8'))
+        cur.execute("ALTER TABLE kb_conversations ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'waiting_for_documents'")
+        cur.execute("ALTER TABLE kb_documents ADD COLUMN IF NOT EXISTS checksum TEXT")
+        conn.commit()
+    except Exception as exc:
+        print("WARNING: Database bootstrap failed during startup.", exc)
+        conn.rollback()
+        return False
+    finally:
+        try:
+            cur.close()
+        except Exception:
+            pass
+        conn.close()
 
     function_sql = Path(__file__).with_name('functions.sql').read_text(encoding='utf-8')
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("DROP FUNCTION IF EXISTS fn_get_user_conversations(bigint)")
-    cur.execute("DROP FUNCTION IF EXISTS fn_get_conversation(bigint, bigint)")
-    cur.execute("DROP FUNCTION IF EXISTS fn_get_documents_by_conversation(bigint, bigint)")
-    cur.execute("DROP FUNCTION IF EXISTS fn_update_conversation_status(bigint, bigint, text)")
-    cur.execute(function_sql)
-    conn.commit()
-    cur.close()
-    conn.close()
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("DROP FUNCTION IF EXISTS fn_get_user_conversations(bigint)")
+        cur.execute("DROP FUNCTION IF EXISTS fn_get_conversation(bigint, bigint)")
+        cur.execute("DROP FUNCTION IF EXISTS fn_get_documents_by_conversation(bigint, bigint)")
+        cur.execute("DROP FUNCTION IF EXISTS fn_update_conversation_status(bigint, bigint, text)")
+        cur.execute(function_sql)
+        conn.commit()
+    except Exception as exc:
+        print("WARNING: Knowledge base functions could not be initialized.", exc)
+        if conn is not None:
+            conn.rollback()
+        return False
+    finally:
+        try:
+            cur.close()
+        except Exception:
+            pass
+        conn.close()
+
+    return True
 
 
 def print_db_backend():
