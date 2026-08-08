@@ -1,10 +1,6 @@
-flask
+Flask>=2.3,<3.0
 textblob
-transformers
-torch
-spacy
-redis
 psycopg2-binary
-langchain
 bcrypt
-pyjwt
+PyJWT
+waitress
