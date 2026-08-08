@@ -192,8 +192,13 @@ def save_message(msg, res):
 
 
 def create_user(name, email, phone, password_hash, is_admin=0):
-    conn = get_connection()
-    cur = conn.cursor()
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+    except Exception as exc:
+        print("WARNING: Could not create user because the database is unavailable.", exc)
+        return None
+
     try:
         cur.execute(
             "INSERT INTO users(name, email, phone, password, is_admin) VALUES (%s, %s, %s, %s, %s) RETURNING id",
@@ -203,32 +208,73 @@ def create_user(name, email, phone, password_hash, is_admin=0):
         conn.commit()
         return user_id
     except Exception as e:
-        conn.rollback()
+        try:
+            conn.rollback()
+        except Exception:
+            pass
         print(e)
         return None
     finally:
-        cur.close()
-        conn.close()
+        try:
+            cur.close()
+        except Exception:
+            pass
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 def get_user_by_email(email):
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id,name,email,phone,password,photo,is_admin FROM users WHERE email=%s", (email,))
-    row = cur.fetchone()
-    cur.close()
-    conn.close()
-    return row
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+    except Exception as exc:
+        print("WARNING: Could not query user by email because the database is unavailable.", exc)
+        return None
+
+    try:
+        cur.execute("SELECT id,name,email,phone,password,photo,is_admin FROM users WHERE email=%s", (email,))
+        row = cur.fetchone()
+        return row
+    except Exception as exc:
+        print("WARNING: Could not load user record.", exc)
+        return None
+    finally:
+        try:
+            cur.close()
+        except Exception:
+            pass
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 def get_user_by_id(uid):
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id,name,email,phone,photo,is_admin FROM users WHERE id=%s", (uid,))
-    row = cur.fetchone()
-    cur.close()
-    conn.close()
-    return row
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+    except Exception as exc:
+        print("WARNING: Could not query user by id because the database is unavailable.", exc)
+        return None
+
+    try:
+        cur.execute("SELECT id,name,email,phone,photo,is_admin FROM users WHERE id=%s", (uid,))
+        row = cur.fetchone()
+        return row
+    except Exception as exc:
+        print("WARNING: Could not load user profile.", exc)
+        return None
+    finally:
+        try:
+            cur.close()
+        except Exception:
+            pass
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 def update_user_photo(uid, photo_path):
