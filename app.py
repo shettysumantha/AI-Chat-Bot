@@ -246,6 +246,33 @@ def logout():
     return jsonify({'ok': True})
 
 
+@app.route('/forgot-password', methods=['GET'])
+def forgot_password_page():
+    return send_from_directory('static', 'forgot-password.html')
+
+
+@app.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    try:
+        data = request.json or {}
+        email = (data.get('email') or '').strip().lower()
+        password = (data.get('password') or '').strip()
+        if not email or not password:
+            return jsonify({'error': 'Email and new password are required'}), 400
+        if len(password) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters'}), 400
+        user = get_user_by_email(email)
+        if not user:
+            return jsonify({'error': 'No account found for that email'}), 404
+        pw_hash = hash_password(password)
+        updated = update_user_password(email, pw_hash)
+        if not updated:
+            return jsonify({'error': 'Password reset failed'}), 500
+        return jsonify({'ok': True, 'message': 'Password updated successfully'})
+    except Exception as exc:
+        return jsonify({'error': f'Password reset failed: {exc}'}), 500
+
+
 @app.route('/me')
 def me():
     uid = session.get('user_id')
