@@ -278,7 +278,9 @@ def upload_photo():
 
 
 def open_browser():
-    webbrowser.open_new("http://127.0.0.1:5000")
+    host = os.environ.get('HOST', '127.0.0.1')
+    port = os.environ.get('PORT', '5000')
+    webbrowser.open_new(f"http://{host}:{port}")
 
 
 # --- OTP and auth helper endpoints (minimal implementations) ---
@@ -422,5 +424,9 @@ def api_reset_password():
 
 
 if __name__ == "__main__":
-    threading.Timer(1.5, open_browser).start()
-    app.run(debug=True, use_reloader=False)
+    host = os.environ.get('HOST', '0.0.0.0')
+    port = int(os.environ.get('PORT', '5000'))
+    debug = os.environ.get('FLASK_DEBUG', '0') == '1'
+    if os.environ.get('OPEN_BROWSER', '0') == '1':
+        threading.Timer(1.5, open_browser).start()
+    app.run(host=host, port=port, debug=debug, use_reloader=False)
